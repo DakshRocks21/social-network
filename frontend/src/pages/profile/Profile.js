@@ -19,6 +19,7 @@ export default function Profile() {
   const navigate = useNavigate()
   const apiRequest = useApi()
   const [user, setUser] = useState(null)
+  const [postContent, setPostContent] = useState('')
   const { user: loggedInUser } = useUser()
 
   const getPosts = async () => {
@@ -68,6 +69,25 @@ export default function Profile() {
     }
 
     alert('todo');
+  }
+
+  async function handleNewPost() {
+    if (loggedInUser === null) {
+      return
+    }
+
+    await apiRequest(config.backendUrl + '/post', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: postContent,
+      }),
+    })
+
+    setPostContent('')
+    getPosts()
   }
 
   if (user === null || loggedInUser === null) {
@@ -154,16 +174,18 @@ export default function Profile() {
                       Add a Post
                     </Typography>
                     <TextField
+                      value={postContent}
                       label="Post Content"
                       multiline
                       rows={4}
                       variant="outlined"
                       fullWidth
+                      onChange={(e) => setPostContent(e.target.value)}
                     />
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => alert('nope lol')}
+                      onClick={handleNewPost}
                       sx={{
                         mt: 2,
                       }}
