@@ -23,7 +23,7 @@ export default function SignIn() {
     void (async () => {
       event.preventDefault()
       const data = new FormData(event.currentTarget)
-      const response = await apiRequest(`${config.backendUrl}/login`, {
+      const response = await apiRequest(`${config.backendUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

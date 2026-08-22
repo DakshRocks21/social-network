@@ -86,7 +86,7 @@ export function newSession(db, user) {
 */
 export function getUidBySessionId(db, sessionId) {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT userId FROM sessions WHERE sessionId = "?"`, [sessionId], (err, row) => {
+    db.get(`SELECT userId FROM sessions WHERE sessionId = ?`, [sessionId], (err, row) => {
       if (err) {
         reject(err);
         return;
