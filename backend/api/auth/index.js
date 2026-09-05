@@ -138,10 +138,12 @@ function validatePassword(password) {
 const MAX_URL_LENGTH = 2048
 
 function isValidAvatarUrl(avatarUrl) {
-  if (avatarUrl.length > MAX_URL_LENGTH) { return false }
-
   if (!avatarUrl) {
     return true;
+  }
+
+  if (typeof avatarUrl !== "string" || avatarUrl.length > MAX_URL_LENGTH) {
+    return false;
   }
 
   try {
