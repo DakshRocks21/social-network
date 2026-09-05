@@ -4,25 +4,12 @@
 // If students use this file for `hashing` exercise, make sure that they know to replace `insertUser` function with the one they have by importing it.
 
 import { syncSchema, getDbConnection } from "./db/index.js";
+import { insertUser } from "./db/user.js";
 import { insertSession } from "./db/auth.js";
 import { insertPost } from "./db/post.js";
 import { insertFriends, insertFriendRequest } from "./db/friend.js";
 import { config } from "./config/index.js";
 import fs from "fs";
-
-function insertUser(db, user) {
-  db.run(
-    `INSERT INTO users (firstName, lastName, username, password, gender, avatarUrl) VALUES (?, ?, ?, ?, ?, ?)`,
-    [user.firstName, user.lastName, user.username, user.password, user.gender, user.avatarUrl],
-    (err) => {
-      if (err) {
-        console.error('Error inserting user:', err);
-    } else {
-        console.log('User inserted successfully');
-      }
-    }
-  );
-}
 
 async function loadTestData() {
   console.log("Deleting database file");

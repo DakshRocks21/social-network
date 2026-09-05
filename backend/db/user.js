@@ -1,4 +1,5 @@
 import sqlite3 from "sqlite3";
+import { generateSalt, hashPassword } from "./auth.js";
 
 /**
  * @param {sqlite3.Database} db
@@ -10,6 +11,7 @@ export function createUserTable(db) {
           lastName TEXT,
           username TEXT,
           password TEXT,
+          salt TEXT,
           gender TEXT,
           avatarUrl TEXT
       )`);
@@ -20,16 +22,19 @@ export function createUserTable(db) {
  * @param {{firstName: string, lastName: string, username: string, password: string, gender: string, avatarUrl: string}} user
  */
 export function insertUser(db, user) {
+  const salt = generateSalt();
+  const hashedPassword = hashPassword(user.password, salt);
+
   return new Promise((resolve, reject) => {
-    db.all(
-      `INSERT into users (firstName, lastName, username, password, gender, avatarUrl)
-        VALUES (?, ?, ?, ?, ?, ?)`, [user.firstName, user.lastName, user.username, user.password, user.gender, user.avatarUrl],
+    db.run(
+      `INSERT into users (firstName, lastName, username, password, salt, gender, avatarUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`, [user.firstName, user.lastName, user.username, hashedPassword, salt, user.gender, user.avatarUrl],
       function (err) {
         if (err) {
           reject(err);
           return;
         }
-        resolve(this.id);
+        resolve(this.lastID);
       }
     );
   });

@@ -1,5 +1,6 @@
 import sqlite3 from "sqlite3";
 import sha2 from "sha2";
+import crypto from "crypto";
 
 import { config } from "../config/index.js";
 
@@ -19,21 +20,75 @@ export function createSessionTable(db) {
  * @param {sqlite3.Database} db
  * @param {object} credentials
 */
-export function getUIDByCredentials(db, credentials) {
+export function generateSalt(length = 5) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+  const charactersLength = characters.length; // 88
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+export function hashPassword(input, salt = '') {
+  const hash = crypto.createHash('sha256');
+  hash.update(salt + input);
+  return hash.digest('hex');
+}
+
+function getUserSaltByUsername(db, username) {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT id FROM users WHERE username = ? AND password = ?`, [credentials.username, credentials.password], (err, row) => {
+    db.get(`SELECT salt FROM users WHERE username = ?`, [username], (err, row) => {
       if (err) {
         reject(err);
         return;
       }
-      
+
       if (row) {
-        resolve(row.id);
-      }
-      else {
+        resolve(row.salt);
+      } else {
         resolve(null);
       }
     });
+  });
+}
+
+/**
+ * @param {sqlite3.Database} db
+ * @param {object} credentials
+*/
+export function getUIDByCredentials(db, credentials) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const salt = await getUserSaltByUsername(db, credentials.username);
+
+      if (salt === null) {
+        // Username not found, or the row predates hashing and has no salt
+        resolve(null);
+        return;
+      }
+
+      const hashedPassword = hashPassword(credentials.password, salt);
+
+      db.get(
+        `SELECT id FROM users WHERE username = ? AND password = ?`,
+        [credentials.username, hashedPassword],
+        (err, row) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          if (row) {
+            resolve(row.id);
+          } else {
+            resolve(null);
+          }
+        }
+      );
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
